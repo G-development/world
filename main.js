@@ -1,10 +1,5 @@
 import * as THREE from "./node_modules/three/build/three.module.js";
 
-// PostProcessing
-import { EffectComposer } from './node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
-// import { RenderPass } from './node_modules/three/examples/jsm/postprocessing/RenderPass.js';
-// import { GlitchPass } from './node_modules/three/examples/jsm/postprocessing/GlitchPass.js';
-
 // Initial stuff
 const scene = new THREE.Scene();
 const loader = new THREE.TextureLoader();
@@ -33,8 +28,6 @@ var light = new THREE.DirectionalLight(0x999999, 1);
 light.position.set(5, 3, 5);
 
 // Add globe
-const bloomComposer = new EffectComposer(renderer);
-const color = new THREE.Color("#FDB813");
 var globe = new THREE.Mesh(
   new THREE.SphereGeometry(0.5, 32, 32),
   new THREE.MeshPhongMaterial({
