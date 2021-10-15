@@ -1,0 +1,15 @@
+{
+  "name": "testworld",
+  "version": "0.0.1",
+  "description": "Trying three.js",
+  "main": "main.js",
+  "dependencies": {
+    "three": "^0.133.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "testcommand"
+  },
+  "author": "Giovanni Cuozzo",
+  "license": "ISC"
+}
