@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "gsap": "^3.8.0"
+  },
   "devDependencies": {
     "copy-webpack-plugin": "^9.0.1",
     "html-loader": "^2.1.2",
