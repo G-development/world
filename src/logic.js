@@ -1,18 +1,9 @@
 import * as THREE from "three";
 
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { GlitchPass } from "three/examples/jsm/postprocessing/GlitchPass.js";
-
 // Initial stuff
 const scene = new THREE.Scene();
 const loader = new THREE.TextureLoader();
-const camera = new THREE.PerspectiveCamera(
-  55,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.z = 1.5;
 
 const renderer = new THREE.WebGLRenderer();
@@ -32,8 +23,6 @@ var light = new THREE.DirectionalLight(0x999999, 1);
 light.position.set(5, 3, 5);
 
 // Add globe
-const bloomComposer = new EffectComposer(renderer);
-const color = new THREE.Color("#FDB813");
 var globe = new THREE.Mesh(
   new THREE.SphereGeometry(0.5, 32, 32),
   new THREE.MeshPhongMaterial({
