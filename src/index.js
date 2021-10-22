@@ -1,1 +1,1 @@
-import "./logic";
+import "./1-logic";
