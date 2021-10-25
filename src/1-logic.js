@@ -1,12 +1,14 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { Interaction } from "three.interaction";
+// import { Interaction } from "three.interaction";
+import * as d3 from "d3";
+import $ from "jquery";
+
+import * as utils from "./x-utils";
 import vShader from "./shaders/vertex";
 import fShader from "./shaders/fragment";
-// import gsap from "gsap";
+
 import "../static/LatLon/countries";
-import $ from "jquery";
-import * as utils from "./x-utils";
 
 // Initial stuff
 const scene = new THREE.Scene();
@@ -74,7 +76,7 @@ var worldGlow = new THREE.Mesh(
 );
 
 // Add all countries from countries.js
-let temp = {x: 0, y: 0, z: 0};
+let temp = { x: 0, y: 0, z: 0 };
 // let temp = utils.calcPosFromLatLonRad(country["Italy"], 0.5);
 Object.keys(country).map(function (key, index) {
   let mesh = new THREE.Mesh(
@@ -85,8 +87,8 @@ Object.keys(country).map(function (key, index) {
   mesh.position.set(pos.x, pos.y, pos.z);
   scene.add(mesh);
 
-  getCurve(temp, pos);
-  temp = pos;
+  // getCurve(temp, pos);
+  // temp = pos;
 });
 
 // example of usage: getCurve(pos, pos2);
