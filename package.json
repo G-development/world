@@ -5,8 +5,8 @@
   "private": true,
   "dependencies": {
     "d3": "^7.1.1",
-    "gsap": "^3.8.0",
-    "jquery": "^3.6.0"
+    "jquery": "^3.6.0",
+    "three-geojson-geometry": "^1.1.5"
   },
   "devDependencies": {
     "copy-webpack-plugin": "^9.0.1",

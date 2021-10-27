@@ -1,7 +1,7 @@
+import * as d3 from "d3";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-// import { Interaction } from "three.interaction";
-import * as d3 from "d3";
+import { GeoJsonGeometry } from "three-geojson-geometry";
 import $ from "jquery";
 
 import * as utils from "./x-utils";
@@ -21,7 +21,8 @@ const camera = new THREE.PerspectiveCamera(
 );
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+// document.body.appendChild(renderer.domElement);
+document.getElementById("world").appendChild(renderer.domElement);
 const controls = new OrbitControls(camera, renderer.domElement);
 camera.position.z = 1.2;
 controls.update();
@@ -43,11 +44,11 @@ var light2 = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
 var globe = new THREE.Mesh(
   new THREE.SphereGeometry(0.5, 32, 32),
   new THREE.MeshPhongMaterial({
-    map: loader.load("images/2_no_clouds_8k.jpg"),
-    bumpMap: loader.load("images/elev_bump_16k.jpg"),
-    bumpScale: 0.005,
-    specularMap: loader.load("images/water_4k.png"),
-    specular: new THREE.Color("white"),
+    // map: loader.load("images/2_no_clouds_8k.jpg"),
+    // bumpMap: loader.load("images/elev_bump_16k.jpg"),
+    // bumpScale: 0.005,
+    // specularMap: loader.load("images/water_4k.png"),
+    // specular: new THREE.Color("white"),
     // map: loader.load("images/map_outline.png"),
   })
 );
@@ -76,20 +77,20 @@ var worldGlow = new THREE.Mesh(
 );
 
 // Add all countries from countries.js
-let temp = { x: 0, y: 0, z: 0 };
-// let temp = utils.calcPosFromLatLonRad(country["Italy"], 0.5);
-Object.keys(country).map(function (key, index) {
-  let mesh = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.003, 1, 1),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 })
-  );
-  let pos = utils.calcPosFromLatLonRad(country[key], 0.5);
-  mesh.position.set(pos.x, pos.y, pos.z);
-  scene.add(mesh);
+// let temp = { x: 0, y: 0, z: 0 };
+// // let temp = utils.calcPosFromLatLonRad(country["Italy"], 0.5);
+// Object.keys(country).map(function (key, index) {
+//   let mesh = new THREE.Mesh(
+//     new THREE.SphereBufferGeometry(0.003, 1, 1),
+//     new THREE.MeshBasicMaterial({ color: 0xff0000 })
+//   );
+//   let pos = utils.calcPosFromLatLonRad(country[key], 0.5);
+//   mesh.position.set(pos.x, pos.y, pos.z);
+//   scene.add(mesh);
 
-  // getCurve(temp, pos);
-  // temp = pos;
-});
+//   // getCurve(temp, pos);
+//   // temp = pos;
+// });
 
 // example of usage: getCurve(pos, pos2);
 function getCurve(p1, p2) {
@@ -112,13 +113,49 @@ function getCurve(p1, p2) {
   scene.add(line);
 }
 
+// Create polygons starting from geojson
+fetch("LatLon/globe_lo.geojson")
+  .then((res) => res.json())
+  .then((countries) => {
+    const alt = 1;
+
+    const lineObjs = [
+      new THREE.LineSegments(
+        new GeoJsonGeometry(d3.geoGraticule10(), alt),
+        new THREE.LineBasicMaterial({
+          color: "white",
+          opacity: 0.04,
+          transparent: true,
+        }),
+        new THREE.MeshPhongMaterial({
+          col: new THREE.Color("red"),
+        })
+      ),
+    ];
+
+    const materials = [
+      new THREE.LineBasicMaterial({ color: "black" }), // outer ring
+      new THREE.LineBasicMaterial({ color: "red" }), // inner holes
+    ];
+
+    countries.features.forEach(({ properties, geometry }) => {
+      lineObjs.push(
+        new THREE.LineSegments(
+          new GeoJsonGeometry(geometry, alt),
+          materials
+        )
+      );
+    })
+    lineObjs.forEach((obj) => scene.add(obj));
+  });
+
 // Add everything to scene
 scene.add(
   // light,
   light2,
   globe,
-  clouds,
-  worldGlow
+  // clouds,
+  // worldGlow
 );
 
 // Render
