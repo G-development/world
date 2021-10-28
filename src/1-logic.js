@@ -117,7 +117,7 @@ function getCurve(p1, p2) {
 fetch("LatLon/globe_lo.geojson")
   .then((res) => res.json())
   .then((countries) => {
-    const alt = 1;
+    const alt = 0.5;
 
     const lineObjs = [
       new THREE.LineSegments(
