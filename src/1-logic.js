@@ -113,50 +113,168 @@ function getCurve(p1, p2) {
   scene.add(line);
 }
 
-// Create polygons starting from geojson
-fetch("LatLon/globe_lo.geojson")
-  .then((res) => res.json())
-  .then((countries) => {
-    const alt = 1;
+// // Create polygons starting from geojson
+// fetch("LatLon/globe_lo.geojson")
+//   .then((res) => res.json())
+//   .then((countries) => {
+//     const alt = 0.5;
 
-    const lineObjs = [
-      new THREE.LineSegments(
-        new GeoJsonGeometry(d3.geoGraticule10(), alt),
-        new THREE.LineBasicMaterial({
-          color: "white",
-          opacity: 0.04,
-          transparent: true,
-        }),
-        new THREE.MeshPhongMaterial({
-          col: new THREE.Color("red"),
-        })
-      ),
-    ];
+//     const lineObjs = [
+//       new THREE.LineSegments(
+//         new GeoJsonGeometry(d3.geoGraticule10(), alt),
+//         new THREE.LineBasicMaterial({
+//           color: "white",
+//           opacity: 0.04,
+//           transparent: true,
+//         }),
+//         new THREE.MeshPhongMaterial({
+//           col: new THREE.Color("red"),
+//         })
+//       ),
+//     ];
 
-    const materials = [
-      new THREE.LineBasicMaterial({ color: "black" }), // outer ring
-      new THREE.LineBasicMaterial({ color: "red" }), // inner holes
-    ];
+//     const materials = [
+//       new THREE.LineBasicMaterial({ color: "black" }), // outer ring
+//       new THREE.LineBasicMaterial({ color: "red" }), // inner holes
+//     ];
 
-    countries.features.forEach(({ properties, geometry }) => {
-      lineObjs.push(
-        new THREE.LineSegments(
-          new GeoJsonGeometry(geometry, alt),
-          materials
-        )
-      );
-    })
-    lineObjs.forEach((obj) => scene.add(obj));
-  });
+//     countries.features.forEach(({ properties, geometry }) => {
+//       lineObjs.push(
+//         new THREE.LineSegments(new GeoJsonGeometry(geometry, alt), materials)
+//       );
+//     });
+//     lineObjs.forEach((obj) => scene.add(obj));
+//   });
 
 // Add everything to scene
 scene.add(
   // light,
   light2,
-  globe,
+  // globe
   // clouds,
   // worldGlow
 );
+
+// let WORLD_JSON;
+// // Start loading geo json
+// d3.json(
+//   "LatLon/globe_lo.geojson"
+// ).then(function(json) {
+//   // Store result
+//   WORLD_JSON = json;
+//   console.log(json);
+
+//   // If data already received, init
+
+//     init();
+
+// });
+
+// function init() {
+//   // Calculate dimensions for graph based on container dimensions
+//   WIDTH = window.innerWidth;
+//   HEIGHT = window.innerHeight;
+//   console.log('got the data');
+// };
+
+var width = window.innerWidth;
+var height = window.innerHeight;
+var COUNTRIES;
+const PROJECTION_AR = 2;
+const PROJECTION = d3
+    .geoEquirectangular()
+    .translate([width / 2, height / 2])
+    .scale(
+      Math.min(width / PROJECTION_AR / Math.PI, height / Math.PI)
+    );
+
+// const svg = d3
+//   .select("#world")
+//   .append("svg")
+//   .attr("width", width)
+//   .attr("height", height);
+
+// const projection = d3
+//   .geoMercator()
+//   .scale(140)
+//   .translate([width / 2, height / 1.4]);
+// const path = d3.geoPath(projection);
+
+// const g = svg.append("g");
+
+d3.json("LatLon/countriesSAS.geojson").then((data) => {
+  // debugger
+  COUNTRIES = data.features;
+
+  // g.selectAll("path")
+  //   .data(COUNTRIES)
+  //   .enter()
+  //   .append("path")
+  //   // .attr("fill", "green")
+  //   .attr("class", function (d) {
+  //     return d.properties.name;
+  //   })
+  //   .attr("d", path);
+
+     // Init sphere geometry
+     var SPHERE_GEOMETRY = new THREE.SphereGeometry(0.5, 250, 250); //1,250,250
+
+     // Init choropleth sphere and add to scene
+     var CHOROPLETH_SPHERE = new THREE.Mesh(
+       SPHERE_GEOMETRY, // geometry for mesh
+       new THREE.MeshBasicMaterial({ map: getTexture() }) // material for mesh
+     );
+ 
+     scene.add(CHOROPLETH_SPHERE);
+});
+
+function getTexture() {
+  // Append canvas and save reference
+  const canvas = d3
+    .select("body")
+    .append("canvas")
+    .attr("width", width)
+    .attr("height", height);
+
+  // Get 2d context of canvas
+  const context = canvas.node().getContext("2d");
+
+  // Create geo path generator
+  const path = d3
+    .geoPath()
+    .projection(PROJECTION)
+    .context(context);
+
+  // Draw background
+  context.fillStyle = "#4DA1A9"; 
+  context.fillRect(0, 0, width, height);
+
+  // Draw features from geojson
+  context.strokeStyle = "#555";
+  context.lineWidth = 0.20; //0.25;
+
+  COUNTRIES.forEach(function(d) {
+    context.fillStyle = 
+    // DATA[d.properties.iso_a3]
+    //   ? COLOR_SCALE(DATA[d.properties.iso_a3].measure)
+      // : 
+    "#CCC"; //COLOR OF COUNTRIES
+    context.beginPath();
+    path(d);
+    context.fill();
+    context.stroke();
+  });
+
+  // Generate texture from canvas
+  const texture = new THREE.Texture(canvas.node());
+  texture.needsUpdate = true;
+
+  // Remove canvas
+  canvas.remove();
+
+  // Return texture
+  return texture;
+}
 
 // Render
 render();
