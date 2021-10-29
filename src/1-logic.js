@@ -5,7 +5,7 @@ import { Map3DGeometry } from "./map3d";
 import vShader from "./shaders/vertex";
 import fShader from "./shaders/fragment";
 
-import "./lib/TweenLite.min.js";
+// import "./lib/TweenLite.min.js";
 
 function makeEnvMapMaterial(file) {
   var material = new THREE.ShaderMaterial({
@@ -67,60 +67,60 @@ function all(data) {
   controls.update();
 
   /************************************************** Balloon popup **************************************************/
-  // var container = document.getElementById("world");
-  // function Balloon( html ) {
-  // 	THREE.Object3D.call( this );
+  var container = document.getElementById("world");
+  function Balloon( html ) {
+  	THREE.Object3D.call( this );
 
-  // 	this.popup = document.createElement( 'div' );
-  // 	this.popup.classList.add( 'balloon' );
-  // 	this.popup.innerHTML = html;
+  	this.popup = document.createElement( 'div' );
+  	this.popup.classList.add( 'balloon' );
+  	this.popup.innerHTML = html;
 
-  // 	this.addEventListener( 'added', (function () {
-  // 		container.appendChild( this.popup );
-  // 	}).bind( this ));
+  	this.addEventListener( 'added', (function () {
+  		container.appendChild( this.popup );
+  	}).bind( this ));
 
-  // 	this.addEventListener( 'removed', (function () {
-  // 		container.removeChild( this.popup );
-  // 	}).bind( this ));
-  // }
+  	this.addEventListener( 'removed', (function () {
+  		container.removeChild( this.popup );
+  	}).bind( this ));
+  }
 
-  // Balloon.prototype = Object.create( THREE.Object3D.prototype );
-  // Balloon.prototype.constructor = Balloon;
+  Balloon.prototype = Object.create( THREE.Object3D.prototype );
+  Balloon.prototype.constructor = Balloon;
 
-  // Balloon.prototype.updateMatrixWorld = (function () {
-  // 	var screenVector = new THREE.Vector3 ();
-  // 	var raycaster = new THREE.Raycaster ();
+  Balloon.prototype.updateMatrixWorld = (function () {
+  	var screenVector = new THREE.Vector3 ();
+  	var raycaster = new THREE.Raycaster ();
 
-  // 	return function( force ) {
-  // 		THREE.Object3D.prototype.updateMatrixWorld.call( this, force );
+  	return function( force ) {
+  		THREE.Object3D.prototype.updateMatrixWorld.call( this, force );
 
-  // 		screenVector.set( 0, 0, 0 ); this.localToWorld( screenVector );
+  		screenVector.set( 0, 0, 0 ); this.localToWorld( screenVector );
 
-  // 		raycaster.ray.direction.copy( screenVector );
+  		raycaster.ray.direction.copy( screenVector );
 
-  // 		raycaster.ray.origin.set( 0, 0, 0 ); camera.localToWorld( raycaster.ray.origin );
-  // 		raycaster.ray.direction.sub( raycaster.ray.origin );
+  		raycaster.ray.origin.set( 0, 0, 0 ); camera.localToWorld( raycaster.ray.origin );
+  		raycaster.ray.direction.sub( raycaster.ray.origin );
 
-  // 		var distance = raycaster.ray.direction.length();
-  // 		raycaster.ray.direction.normalize();
+  		var distance = raycaster.ray.direction.length();
+  		raycaster.ray.direction.normalize();
 
-  // 		var intersections = raycaster.intersectObject( scene, true );
-  // 		if( intersections.length && ( intersections[0].distance < distance )) {
+  		var intersections = raycaster.intersectObject( scene, true );
+  		if( intersections.length && ( intersections[0].distance < distance )) {
 
-  // 			// overlay anchor is obscured
-  // 			this.popup.style.display = 'none';
+  			// overlay anchor is obscured
+  			this.popup.style.display = 'none';
 
-  // 		} else {
+  		} else {
 
-  // 			// overlay anchor is visible
-  // 			screenVector.project( camera );
+  			// overlay anchor is visible
+  			screenVector.project( camera );
 
-  // 			this.popup.style.display = '';
-  // 			this.popup.style.left = Math.round((screenVector.x + 1) * container.offsetWidth / 2 - 50) + 'px';
-  // 			this.popup.style.top = Math.round((1 - screenVector.y) * container.offsetHeight / 2 - 100) + 'px';
-  // 		}
-  // 	};
-  // }) ();
+  			this.popup.style.display = '';
+  			this.popup.style.left = Math.round((screenVector.x + 1) * container.offsetWidth / 2 - 50) + 'px';
+  			this.popup.style.top = Math.round((1 - screenVector.y) * container.offsetHeight / 2 - 100) + 'px';
+  		}
+  	};
+  }) ();
 
   /************************************************** Create objs **************************************************/
   // Stars background
@@ -151,31 +151,6 @@ function all(data) {
     data[name].mesh.name = name;
   }
 
-  /************************************************** showGDP/Debt **************************************************/
-  // function showGDP() {
-  //   for (var name in data) {
-  //     var scale = 1 + 7e-6 * (data[name].data.gdp || 0);
-  //     TweenLite.to(data[name].mesh.scale, 0.5, {
-  //       x: scale,
-  //       y: scale,
-  //       z: scale,
-  //     });
-  //   }
-  // };
-
-  // function showDebt() {
-  //   for (var name in data) {
-  //     var scale =
-  //       1 +
-  //       (7e-6 * (data[name].data.gdp || 0) * (data[name].data.debt || 0)) / 100;
-  //     TweenLite.to(data[name].mesh.scale, 0.5, {
-  //       x: scale,
-  //       y: scale,
-  //       z: scale,
-  //     });
-  //   }
-  // };
-
   /************************************************** Resize & render **************************************************/
   var resize = function () {
     var w = renderer.domElement.parentElement.clientWidth;
@@ -198,43 +173,43 @@ function all(data) {
   render();
 
   /************************************************** Manage click and balloon **************************************************/
-  // renderer.domElement.addEventListener('click', function (event) {
-  // 	var raycaster = new THREE.Raycaster ();
+  renderer.domElement.addEventListener('click', function (event) {
+  	var raycaster = new THREE.Raycaster ();
 
-  // 	raycaster.ray.origin.set (0, 0, 0);
-  // 	camera.localToWorld (raycaster.ray.origin);
-  // 	raycaster.ray.direction.set (
-  // 		(event.clientX / window.innerWidth) * 2 - 1, 1 - 2 * (event.clientY / window.innerHeight),
-  // 	0.5).unproject (camera).sub (raycaster.ray.origin).normalize ();
+  	raycaster.ray.origin.set (0, 0, 0);
+  	camera.localToWorld (raycaster.ray.origin);
+  	raycaster.ray.direction.set (
+  		(event.clientX / window.innerWidth) * 2 - 1, 1 - 2 * (event.clientY / window.innerHeight),
+  	0.5).unproject (camera).sub (raycaster.ray.origin).normalize ();
 
-  // 	var intersects = raycaster.intersectObject (scene, true);
-  // 	if (intersects && intersects[0]) {
+  	var intersects = raycaster.intersectObject (scene, true);
+  	if (intersects && intersects[0]) {
 
-  // 		var mesh = intersects[0].object;
-  // 		if (mesh.name) {
+  		var mesh = intersects[0].object;
+  		if (mesh.name) {
 
-  // 			var point = intersects[0].point;
-  // 			mesh.worldToLocal (point);
+  			var point = intersects[0].point;
+  			mesh.worldToLocal (point);
 
-  // 			var gdp = data[mesh.name].data.gdp, debt = 'n/a';
-  // 			if (gdp) {
-  // 				debt = data[mesh.name].data.debt;
-  // 				if (debt) {
-  // 					debt = '$' + Math.floor (gdp * debt / 100);
-  // 				} else {
-  // 					debt = 'n/a';
-  // 				}
-  // 				gdp = '$' + Math.floor (gdp) + ' (' + data[mesh.name].data.gdpYear + ')';
-  // 			} else {
-  // 				gdp = 'n/a'
-  // 			}
+  			var gdp = data[mesh.name].data.gdp, debt = 'n/a';
+  			if (gdp) {
+  				debt = data[mesh.name].data.debt;
+  				if (debt) {
+  					debt = '$' + Math.floor (gdp * debt / 100);
+  				} else {
+  					debt = 'n/a';
+  				}
+  				gdp = '$' + Math.floor (gdp) + ' (' + data[mesh.name].data.gdpYear + ')';
+  			} else {
+  				gdp = 'n/a'
+  			}
 
-  // 			document.querySelector('#world .balloon .text').innerHTML = mesh.name + '<br /><br />GDP: ' + gdp + '<br />Debt: ' + debt;
+  			document.querySelector('#world .balloon .text').innerHTML = mesh.name + '<br /><br />GDP: ' + gdp + '<br />Debt: ' + debt ;
 
-  // 			label.position.copy (point).normalize ().multiplyScalar (1.005); mesh.add (label);
-  // 		}
-  // 	}
-  // });
+  			label.position.copy (point).normalize ().multiplyScalar (1.005); mesh.add (label);
+  		}
+  	}
+  });
 }
 
 /************************************************** Data **************************************************/
