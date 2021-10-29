@@ -1,207 +1,148 @@
-import * as d3 from "d3";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { GeoJsonGeometry } from "three-geojson-geometry";
-import $ from "jquery";
 
-import {Map3DGeometry} from "./map3d";
-import * as utils from "./x-utils";
+import { Map3DGeometry } from "./map3d";
 import vShader from "./shaders/vertex";
 import fShader from "./shaders/fragment";
 
-import "../static/LatLon/countries";
+import "./lib/TweenLite.min.js";
 
-// Initial stuff
-const scene = new THREE.Scene();
-const loader = new THREE.TextureLoader();
-const camera = new THREE.PerspectiveCamera(
-  55,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-// document.body.appendChild(renderer.domElement);
-document.getElementById("world").appendChild(renderer.domElement);
-const controls = new OrbitControls(camera, renderer.domElement);
-camera.position.z = 1.2;
-controls.update();
-
-// Stars background
-const bgTexture = loader.load("images/galaxy_starfield.png");
-bgTexture.wrapS = bgTexture.wrapT = THREE.RepeatWrapping;
-bgTexture.repeat.set(6, 5);
-scene.background = bgTexture;
-
-// Add lights
-scene.add(new THREE.AmbientLight(0x333333));
-
-var light = new THREE.DirectionalLight(0x999999, 1);
-light.position.set(5, 3, 5);
-var light2 = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
-
-// Add globe
-var globe = new THREE.Mesh(
-  new THREE.SphereGeometry(0.5, 32, 32),
-  new THREE.MeshPhongMaterial({
-    // map: loader.load("images/2_no_clouds_8k.jpg"),
-    // bumpMap: loader.load("images/elev_bump_16k.jpg"),
-    // bumpScale: 0.005,
-    // specularMap: loader.load("images/water_4k.png"),
-    // specular: new THREE.Color("white"),
-    // map: loader.load("images/map_outline.png"),
-  })
-);
-
-// Add clouds
-var clouds = new THREE.Mesh(
-  new THREE.SphereGeometry(0.503, 32, 32),
-  new THREE.MeshPhongMaterial({
-    map: loader.load("images/fair_clouds_4k.png"),
-    transparent: true,
-  })
-);
-
-// Add glow
-var worldGlow = new THREE.Mesh(
-  new THREE.SphereGeometry(0.58, 32, 32),
-  new THREE.ShaderMaterial({
+function makeEnvMapMaterial(file) {
+  var material = new THREE.ShaderMaterial({
     uniforms: {
-      c: { type: "f", value: 0.5 },
-      p: { type: "f", value: 3.0 },
+      tMatCap: {
+        type: "t",
+        value: new THREE.TextureLoader().load(file), //THREE.ImageUtils.loadTexture(file),
+      },
     },
     vertexShader: vShader,
     fragmentShader: fShader,
-    side: THREE.BackSide,
-  })
-);
-
-// Add all countries from countries.js
-// let temp = { x: 0, y: 0, z: 0 };
-// // let temp = utils.calcPosFromLatLonRad(country["Italy"], 0.5);
-// Object.keys(country).map(function (key, index) {
-//   let mesh = new THREE.Mesh(
-//     new THREE.SphereBufferGeometry(0.003, 1, 1),
-//     new THREE.MeshBasicMaterial({ color: 0xff0000 })
-//   );
-//   let pos = utils.calcPosFromLatLonRad(country[key], 0.5);
-//   mesh.position.set(pos.x, pos.y, pos.z);
-//   scene.add(mesh);
-
-//   // getCurve(temp, pos);
-//   // temp = pos;
-// });
-
-// example of usage: getCurve(pos, pos2);
-function getCurve(p1, p2) {
-  let v1 = new THREE.Vector3(p1.x, p1.y, p1.z);
-  let v2 = new THREE.Vector3(p2.x, p2.y, p2.z);
-  let points = [];
-
-  for (let i = 0; i < 20; i++) {
-    let p = new THREE.Vector3().lerpVectors(v1, v2, i / 20);
-    p.normalize();
-    p.multiplyScalar(0.5 + 0.1 * Math.sin((Math.PI * i) / 20));
-    points.push(p);
-  }
-
-  let path = new THREE.CatmullRomCurve3(points);
-
-  const geometry = new THREE.TubeGeometry(path, 20, 0.001, 8, false);
-  const material = new THREE.MeshBasicMaterial({ color: 0xa8a8a8 });
-  const line = new THREE.Mesh(geometry, material);
-  scene.add(line);
-}
-
-// Create polygons starting from geojson
-fetch("LatLon/globe_lo.geojson")
-  .then((res) => res.json())
-  .then((countries) => {
-    const alt = 1;
-
-    const lineObjs = [
-      new THREE.LineSegments(
-        new GeoJsonGeometry(d3.geoGraticule10(), alt),
-        new THREE.LineBasicMaterial({
-          color: "white",
-          opacity: 0.04,
-          transparent: true,
-        }),
-        new THREE.MeshPhongMaterial({
-          col: new THREE.Color("red"),
-        })
-      ),
-    ];
-
-    const materials = [
-      new THREE.LineBasicMaterial({ color: "black" }), // outer ring
-      new THREE.LineBasicMaterial({ color: "red" }), // inner holes
-    ];
-
-    countries.features.forEach(({ properties, geometry }) => {
-      lineObjs.push(
-        new THREE.LineSegments(
-          new GeoJsonGeometry(geometry, alt),
-          materials
-        )
-      );
-    })
-    lineObjs.forEach((obj) => scene.add(obj));
+    flatShading: THREE.SmoothShading,
   });
 
-// Add everything to scene
-scene.add(
-  // light,
-  light2,
-  // globe,
-  // clouds,
-  // worldGlow
-);
+  material.uniforms.tMatCap.value.wrapS =
+    material.uniforms.tMatCap.value.wrapT = THREE.ClampToEdgeWrapping;
+  return material;
+}
 
 function all(data) {
-  // var scene = new THREE.Scene();
+  /************************************************** Initial stuff **************************************************/
+  var scene = new THREE.Scene();
 
-  // var camera = new THREE.PerspectiveCamera();
-  // camera.position.set(0, 600, 800);
-  // camera.lookAt(scene.position);
-  // scene.add(camera);
+  var camera = new THREE.PerspectiveCamera();
+  camera.position.set(0, 600, 800);
+  camera.lookAt(scene.position);
+  scene.add(camera);
 
-  // var renderer, gold, blue, radius;
-  // try {
-  //   renderer = new THREE.WebGLRenderer({ antialias: true });
-  //   gold = makeEnvMapMaterial("/assets/gold.jpg");
-  //   blue = makeEnvMapMaterial("/assets/blue.jpg");
-  //   radius = 0.995;
-  // } catch (noWebGL) {
-  //   renderer = new THREE.CanvasRenderer();
-  //   gold = new THREE.MeshLambertMaterial({
-  //     color: 0xffaa50,
-  //     shading: THREE.FlatShading,
-  //   });
-  //   blue = new THREE.MeshLambertMaterial({
-  //     color: 0x50aaff,
-  //     shading: THREE.FlatShading,
-  //   });
-  //   radius = 0.9; // smaller radius makes the sorting less atrocious
+  const loader = new THREE.TextureLoader();
 
-  //   var light = new THREE.DirectionalLight(0xffffff);
-  //   light.position.set(0, 0, 1);
-  //   scene.add(light); // materials are solid black without the light
+  var renderer, gold, blue, radius;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById("world").appendChild(renderer.domElement);
+    gold = makeEnvMapMaterial("./gold.jpg");
+    blue = makeEnvMapMaterial("./blue.jpg");
+    radius = 0.99;
+  } catch (noWebGL) {
+    renderer = new THREE.CanvasRenderer();
+    gold = new THREE.MeshLambertMaterial({
+      color: 0xffaa50,
+      shading: THREE.FlatShading,
+    });
+    blue = new THREE.MeshLambertMaterial({
+      color: 0x50aaff,
+      shading: THREE.FlatShading,
+    });
+    radius = 0.9; // smaller radius makes the sorting less atrocious
+
+    var light = new THREE.DirectionalLight(0xffffff);
+    light.position.set(0, 0, 1);
+    scene.add(light); // materials are solid black without the light
+  }
+  renderer.setClearColor(0x000000); // Background color
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  //camera.position.z = 1.2;
+  controls.update();
+
+  /************************************************** Balloon popup **************************************************/
+  // var container = document.getElementById("world");
+  // function Balloon( html ) {
+  // 	THREE.Object3D.call( this );
+
+  // 	this.popup = document.createElement( 'div' );
+  // 	this.popup.classList.add( 'balloon' );
+  // 	this.popup.innerHTML = html;
+
+  // 	this.addEventListener( 'added', (function () {
+  // 		container.appendChild( this.popup );
+  // 	}).bind( this ));
+
+  // 	this.addEventListener( 'removed', (function () {
+  // 		container.removeChild( this.popup );
+  // 	}).bind( this ));
   // }
-  // renderer.setClearColor(0xffffff);
 
-  var container = document.getElementById("world");
-  container.appendChild(renderer.domElement);
+  // Balloon.prototype = Object.create( THREE.Object3D.prototype );
+  // Balloon.prototype.constructor = Balloon;
 
+  // Balloon.prototype.updateMatrixWorld = (function () {
+  // 	var screenVector = new THREE.Vector3 ();
+  // 	var raycaster = new THREE.Raycaster ();
+
+  // 	return function( force ) {
+  // 		THREE.Object3D.prototype.updateMatrixWorld.call( this, force );
+
+  // 		screenVector.set( 0, 0, 0 ); this.localToWorld( screenVector );
+
+  // 		raycaster.ray.direction.copy( screenVector );
+
+  // 		raycaster.ray.origin.set( 0, 0, 0 ); camera.localToWorld( raycaster.ray.origin );
+  // 		raycaster.ray.direction.sub( raycaster.ray.origin );
+
+  // 		var distance = raycaster.ray.direction.length();
+  // 		raycaster.ray.direction.normalize();
+
+  // 		var intersections = raycaster.intersectObject( scene, true );
+  // 		if( intersections.length && ( intersections[0].distance < distance )) {
+
+  // 			// overlay anchor is obscured
+  // 			this.popup.style.display = 'none';
+
+  // 		} else {
+
+  // 			// overlay anchor is visible
+  // 			screenVector.project( camera );
+
+  // 			this.popup.style.display = '';
+  // 			this.popup.style.left = Math.round((screenVector.x + 1) * container.offsetWidth / 2 - 50) + 'px';
+  // 			this.popup.style.top = Math.round((1 - screenVector.y) * container.offsetHeight / 2 - 100) + 'px';
+  // 		}
+  // 	};
+  // }) ();
+
+  /************************************************** Create objs **************************************************/
+  // Stars background
+  const bgTexture = loader.load("images/galaxy_starfield.png");
+  bgTexture.wrapS = bgTexture.wrapT = THREE.RepeatWrapping;
+  bgTexture.repeat.set(6, 5);
+  scene.background = bgTexture;
+
+  // Create globe
   var globe = new THREE.Object3D();
   globe.scale.set(250, 250, 250);
   scene.add(globe);
 
-  var blue = new THREE.Color(0x0000ff);
-  var gold = new THREE.Color(0x00ff00);
+  var label = new Balloon(
+  	'<div class="text">' +
+  		'<br /><br /><div style="text-align: center; width: 100%">Click for country info :)</div>'
+  	+ '</div>'
+  	+ '<div class="arrow"></div>' );
+  label.position.set( 1e-3, 1, 1e-3 );
+  globe.add( label );
 
-  var geometry = new THREE.SphereGeometry(0.5, 30, 15);
+  var geometry = new THREE.SphereGeometry(radius, 30, 10);
   globe.add(new THREE.Mesh(geometry, blue));
 
   for (var name in data) {
@@ -210,7 +151,8 @@ function all(data) {
     data[name].mesh.name = name;
   }
 
-  // showGDP = function () {
+  /************************************************** showGDP/Debt **************************************************/
+  // function showGDP() {
   //   for (var name in data) {
   //     var scale = 1 + 7e-6 * (data[name].data.gdp || 0);
   //     TweenLite.to(data[name].mesh.scale, 0.5, {
@@ -221,7 +163,7 @@ function all(data) {
   //   }
   // };
 
-  // showDebt = function () {
+  // function showDebt() {
   //   for (var name in data) {
   //     var scale =
   //       1 +
@@ -234,6 +176,7 @@ function all(data) {
   //   }
   // };
 
+  /************************************************** Resize & render **************************************************/
   var resize = function () {
     var w = renderer.domElement.parentElement.clientWidth;
     var h = renderer.domElement.parentElement.clientHeight;
@@ -243,31 +186,58 @@ function all(data) {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   };
+  window.addEventListener("resize", resize, false);
 
   var render = function () {
     requestAnimationFrame(render);
-    globe.rotation.y += 0.01;
+    //   globe.rotation.y += 0.01;
     renderer.render(scene, camera);
   };
 
-  window.addEventListener("resize", resize, false);
-
   resize();
   render();
+
+  /************************************************** Manage click and balloon **************************************************/
+  // renderer.domElement.addEventListener('click', function (event) {
+  // 	var raycaster = new THREE.Raycaster ();
+
+  // 	raycaster.ray.origin.set (0, 0, 0);
+  // 	camera.localToWorld (raycaster.ray.origin);
+  // 	raycaster.ray.direction.set (
+  // 		(event.clientX / window.innerWidth) * 2 - 1, 1 - 2 * (event.clientY / window.innerHeight),
+  // 	0.5).unproject (camera).sub (raycaster.ray.origin).normalize ();
+
+  // 	var intersects = raycaster.intersectObject (scene, true);
+  // 	if (intersects && intersects[0]) {
+
+  // 		var mesh = intersects[0].object;
+  // 		if (mesh.name) {
+
+  // 			var point = intersects[0].point;
+  // 			mesh.worldToLocal (point);
+
+  // 			var gdp = data[mesh.name].data.gdp, debt = 'n/a';
+  // 			if (gdp) {
+  // 				debt = data[mesh.name].data.debt;
+  // 				if (debt) {
+  // 					debt = '$' + Math.floor (gdp * debt / 100);
+  // 				} else {
+  // 					debt = 'n/a';
+  // 				}
+  // 				gdp = '$' + Math.floor (gdp) + ' (' + data[mesh.name].data.gdpYear + ')';
+  // 			} else {
+  // 				gdp = 'n/a'
+  // 			}
+
+  // 			document.querySelector('#world .balloon .text').innerHTML = mesh.name + '<br /><br />GDP: ' + gdp + '<br />Debt: ' + debt;
+
+  // 			label.position.copy (point).normalize ().multiplyScalar (1.005); mesh.add (label);
+  // 		}
+  // 	}
+  // });
 }
 
-
-// // Render
-// render();
-// function render() {
-//   requestAnimationFrame(render);
-//   // globe.rotation.y += 0.0003;
-//   // clouds.rotation.y += 0.0004;
-//   controls.update();
-//   renderer.render(scene, camera);
-// }
-
-
+/************************************************** Data **************************************************/
 all({
   Afghanistan: {
     vertices: [

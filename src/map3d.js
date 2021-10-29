@@ -98,4 +98,4 @@ export function Map3DGeometry (data, innerRadius) {
 	this.boundingSphere = new THREE.Sphere (new THREE.Vector3 (), 1);
 }
 
-Map3DGeometry.prototype = Object.create (THREE.BufferGeometry.prototype);
+Map3DGeometry.prototype = Object.create (THREE.Geometry.prototype);

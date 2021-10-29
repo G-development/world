@@ -5,14 +5,14 @@
 // `;
 
 const fragmentShader = `
-    uniform float c;
-    uniform float p;
-    varying vec3 vNormal;
-    void main() 
-    {
-        float intensity = pow( c - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), p ); 
-        gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 ) * intensity;
-    }
+uniform sampler2D tMatCap;
+
+      varying vec2 vN;
+
+      void main() {
+      	vec3 base = texture2D( tMatCap, vN ).rgb;
+      	gl_FragColor = vec4( base, 1. );
+      }
 `;
 
 export default fragmentShader;
