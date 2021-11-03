@@ -3,11 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "private": true,
-  "dependencies": {
-    "d3": "^7.1.1",
-    "jquery": "^3.6.0",
-    "three-geojson-geometry": "^1.1.5"
-  },
+  "dependencies": {},
   "devDependencies": {
     "copy-webpack-plugin": "^9.0.1",
     "html-loader": "^2.1.2",
